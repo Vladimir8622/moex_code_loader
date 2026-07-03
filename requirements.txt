@@ -1,0 +1,8 @@
+pandas>=1.5.0
+numpy>=1.21.0
+matplotlib>=3.5.0
+requests>=2.28.0
+apimoex>=1.2.0
+moexalgo>=1.0.0
+tqdm>=4.60.0
+urllib3>=1.26.0
