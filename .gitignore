@@ -1,4 +1,5 @@
 MOEX
 __pycache__/
 continous
-summary
+load_summary
+test.py

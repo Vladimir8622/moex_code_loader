@@ -1,3 +1,4 @@
+# TODO написать пропуск файлов что уже созданы
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,11 +10,13 @@ from pathlib import Path
 import utilities
 import tqdm
 from moexalgo import Market
+import yaml
 
+def merge_futures(data_folder, out_folder, summary_folder,config):
+    month_names = config['general']['months']
+    years = config['general']['years']
+    tickers = utilities.get_futures_active_tickers()
 
-
-def merge_futures(data_folder, out_folder, summary_folder):
-    month_names, years, tickers = generate_names()
     for ticker in tqdm.tqdm(tickers, desc='Merging futures', unit='ticker'):
         # print(ticker)
         candles = pd.DataFrame()
@@ -37,7 +40,7 @@ def merge_futures(data_folder, out_folder, summary_folder):
                     temp_candles = pd.read_csv(data_folder / f'{contract_name}.csv', index_col = 'begin')
                     temp_candles.index = pd.to_datetime(temp_candles.index, format = '%Y-%m-%d %H:%M:%S')
                     temp_candles['ticker'] = contract_name
-                    volumes = pd.DataFrame(temp_candles['volume'].resample('1d').sum())
+                    volumes = pd.DataFrame(temp_candles['volume'].resample('1D').sum())
                     volumes.columns = [contract_name]
                     
                     plt.fill_between(volumes.index,np.log(1+volumes).values.flatten())
@@ -83,29 +86,10 @@ def merge_futures(data_folder, out_folder, summary_folder):
             candles.to_csv(out_folder / f'{ticker}_1min.csv')
 
         plt.close('all')
-            
-
-def get_futures_active_tickers():
-    eq = Market('futures')
-    tickers = eq.tickers()
-    tickers = pd.DataFrame(tickers)['ticker'].tolist()
-
-    # Remove last 2 symbols from each ticker
-    tickers = [ticker[:-2] for ticker in tickers]
-    tickers = pd.Series(tickers).unique().tolist()
-
-    return(tickers)
-
-def generate_names():
-    month_names = np.array(['F','G','H','J','K','M','N','Q','U','V','X','Z'])
-    years = np.arange(2022,2026)
-    tickers = get_futures_active_tickers()
-    return(month_names, years, tickers)
 
 def merge_5min(out_folder):
-    month_names, years, tickers = generate_names()
+    tickers = utilities.get_futures_active_tickers()
     for ticker in tqdm.tqdm(tickers, desc='Merging 5min', unit='ticker'):
-        # print(ticker)
         onemin_file = out_folder / f'{ticker}_1min.csv'
         if os.path.isfile(onemin_file):
             candles_1min = pd.read_csv(onemin_file, index_col = 'begin')
@@ -123,12 +107,18 @@ def merge_5min(out_folder):
             candles_5min.to_csv(out_folder / f'{ticker}_5min.csv')
 
 if __name__ == '__main__':
+    # Подгрузка конфигурации запуска
+    with open('config.yaml', 'r', encoding='utf-8') as f:
+        config = yaml.safe_load(f)
+    # Проверка необходимости запускать скрипт
+    if config['merge']['enabled']:
 
-    data_folder = Path('MOEX')
-    summary_folder = Path('summary')
-    summary_folder.mkdir(parents=True, exist_ok=True)
-    out_folder = Path('continous')
-    out_folder.mkdir(parents=True, exist_ok=True)
+        data_folder = Path(config['general']['data_folder'])
+        summary_folder = Path(config['general']['summary_of_loading_folder'])
+        summary_folder.mkdir(parents=True, exist_ok=True)
 
-    merge_futures(data_folder, out_folder, summary_folder)
-    merge_5min(out_folder)
+        out_folder = Path(config['general']['continuous_folder'])
+        out_folder.mkdir(parents=True, exist_ok=True)
+
+        merge_futures(data_folder, out_folder, summary_folder,config)
+        merge_5min(out_folder)

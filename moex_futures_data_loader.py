@@ -1,5 +1,4 @@
-# TODO: tickers with more than two symbols
-
+# TODO поменять обьяву функции для явной передачи пути
 import pandas as pd
 import numpy as np
 import matplotlib
@@ -18,9 +17,7 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 import pandas as pd
 import utilities
-
-
-data_folder = 'MOEX'
+import yaml
 
 def create_robust_session():
     """
@@ -69,15 +66,16 @@ def make_rets(ticker, start, end, max_retries=7, base_delay=5):
             
             df = pd.DataFrame(data)
             if df.shape[0] > 0:
-                # print(df.head())
                 df.set_index("begin", inplace=True)
                 df.index = pd.to_datetime(df.index)
                 df.name = ticker
+                # Возможны Nan в этом столбце
                 df['log_ret'] = np.log(df.close).diff()
-                
-                # Use pathlib for robust path construction
-                output_path = Path(data_folder) / f"{ticker}.csv"
+                df.replace([np.inf, -np.inf], np.nan, inplace=True)
+                output_path = data_folder / f"{ticker}.csv"
                 df.to_csv(output_path)
+                # delay between successful requests to be more respectful to the API
+                time.sleep(random.uniform(2,3))
                 return True
             else:
                 # print(f"No data for {ticker}")
@@ -96,49 +94,46 @@ def make_rets(ticker, start, end, max_retries=7, base_delay=5):
             print(f"Unexpected error for {ticker}: {e}")
             return False
     
-    # Longer delay between successful requests to be more respectful to the API
-    time.sleep(random.uniform(5, 10))
     return False
 
-
 if __name__ == '__main__':
-    tickers = utilities.get_futures_active_tickers()
+    # Подгрузка конфигурации запуска
+    with open('config.yaml', 'r', encoding='utf-8') as f:
+        config = yaml.safe_load(f)
+    # Проверка необходимости запускать скрипт
+    if config['load']['enabled']:
+        # Use pathlib for robust path construction
+        data_folder = Path(config['general']['data_folder'])
 
-    month_names = np.array(['F','G','H','J','K','M','N','Q','U','V','X','Z'])
-    #month_names = np.array(['V','X','Z'])
+        tickers = utilities.get_futures_active_tickers()
 
-    years = np.arange(2024,2026)
+        month_names = config['general']['months']
 
-    # Add progress bar for ticker processing with error tracking
-    successful_requests = 0
-    failed_requests = 0
+        years = config['general']['years']
 
-    for ticker in tqdm(tickers, desc="Processing tickers", unit="ticker"):
-        # print(f"\nProcessing ticker: {ticker}")
-        # Use pathlib for robust path construction and create all subdirectories
-        out_folder = Path(data_folder)
-        out_folder.mkdir(parents=True, exist_ok=True)
-        
-        for year in years:
-            for month in month_names:
-                start = datetime.datetime(year-1, 1, 1)
-                end = datetime.datetime(year+1, 1, 1)
-                contract_name = ticker+month+str(year)[-1]
-                
-                # Check if file already exists to avoid re-downloading
-                output_file = out_folder / f"{contract_name}.csv"
-                if output_file.exists():
-                    # print(f"  Skipping {contract_name} - file already exists")
-                    continue
+        # Add progress bar for ticker processing with error tracking
+        successful_requests = 0
+        failed_requests = 0
+
+        for ticker in tqdm(tickers, desc="Processing tickers", unit="ticker"):
+
+            out_folder = data_folder
+            out_folder.mkdir(parents=True, exist_ok=True)
+            
+            for year in years:
+                for month in month_names:
+                    start = datetime.datetime(year, 1, 1)
+                    end = datetime.datetime(year+1, 1, 1)
+                    contract_name = ticker+month+str(year)[-1]
                     
-                # print(f"  Fetching {contract_name} ({start.date()} to {end.date()})")
-                success = make_rets(contract_name, start, end)
-                
-                if success:
-                    successful_requests += 1
-                else:
-                    failed_requests += 1
-
-    # print(f"\nSummary: {successful_requests} successful, {failed_requests} failed requests")
-
-
+                    # Check if file already exists to avoid re-downloading
+                    output_file = out_folder / f"{contract_name}.csv"
+                    if output_file.exists():
+                        continue
+                        
+                    success = make_rets(contract_name, start, end)
+                    
+                    if success:
+                        successful_requests += 1
+                    else:
+                        failed_requests += 1
