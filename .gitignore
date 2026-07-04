@@ -3,5 +3,5 @@ MOEX
 load_summary
 merge_summary
 continous
-strategy\graphs_and_stats
+strategy/graphs_and_stats
 test.py
