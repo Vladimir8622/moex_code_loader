@@ -2,4 +2,5 @@ MOEX
 __pycache__/
 continous
 load_summary
+merge_summary
 test.py

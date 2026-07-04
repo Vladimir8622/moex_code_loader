@@ -114,7 +114,7 @@ if __name__ == '__main__':
     if config['merge']['enabled']:
 
         data_folder = Path(config['general']['data_folder'])
-        summary_folder = Path(config['general']['summary_of_loading_folder'])
+        summary_folder = Path(config['general']['summary_of_merging_folder'])
         summary_folder.mkdir(parents=True, exist_ok=True)
 
         out_folder = Path(config['general']['continuous_folder'])

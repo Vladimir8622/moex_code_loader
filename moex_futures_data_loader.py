@@ -1,4 +1,3 @@
-# TODO поменять обьяву функции для явной передачи пути
 import pandas as pd
 import numpy as np
 import matplotlib
@@ -47,7 +46,7 @@ def create_robust_session():
     
     return session
 
-def make_rets(ticker, start, end, max_retries=7, base_delay=5):
+def make_rets(ticker, start, end, data_folder, max_retries=7, base_delay=5):
     """
     Fetch market data with enhanced retry logic and circuit breaker pattern
     """
@@ -131,7 +130,7 @@ if __name__ == '__main__':
                     if output_file.exists():
                         continue
                         
-                    success = make_rets(contract_name, start, end)
+                    success = make_rets(contract_name, start, end, data_folder)
                     
                     if success:
                         successful_requests += 1
