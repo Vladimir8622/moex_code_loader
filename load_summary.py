@@ -105,8 +105,3 @@ for ticker in tickers:
 
 summary_plot(tickers_quarterly,quaterly_month_names,'summary_check_quarterly.png')
 summary_plot(tickers_monthly,only_monthly_month_names,'summary_check_monthly.png')
-def generate_names():
-    month_names = np.array(['F','G','H','J','K','M','N','Q','U','V','X','Z'])
-    years = np.arange(2022,2026)
-    tickers = get_futures_active_tickers()
-    return(month_names, years, tickers)
