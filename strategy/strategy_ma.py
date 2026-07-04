@@ -65,9 +65,9 @@ results_sharpe = wf_results["sharpe"]
 results_total = wf_results["total_return"]
 results_max = wf_results["max_drawdown"]
 
-results_sharpe.to_csv("results_sharpe.csv", index=False)
-results_total.to_csv("results_total_return.csv", index=False)
-results_max.to_csv("results_max_drawdown.csv", index=False)
+results_sharpe.to_csv("strategy/graphs_and_stats/results_sharpe.csv", index=False)
+results_total.to_csv("strategy/graphs_and_stats/results_total_return.csv", index=False)
+results_max.to_csv("strategy/graphs_and_stats/results_max_drawdown.csv", index=False)
 
 ma_fast_period = 50
 ma_slow_period = 200
@@ -87,7 +87,7 @@ plt.legend()
 plt.grid(True, alpha=0.3)
 plt.xticks(rotation=45)
 plt.tight_layout()
-plt.savefig("price_ma.png", dpi=300, bbox_inches="tight")
+plt.savefig("strategy/graphs_and_stats/price_ma.png", dpi=300, bbox_inches="tight")
 plt.show()
 
 plt.figure(figsize=(10, 6))
@@ -96,7 +96,7 @@ plt.xlabel("Log Return")
 plt.ylabel("Frequency")
 plt.grid(alpha=0.3)
 plt.tight_layout()
-plt.savefig("log_ret.png", dpi=300, bbox_inches="tight")
+plt.savefig("strategy/graphs_and_stats/log_ret.png", dpi=300, bbox_inches="tight")
 plt.show()
 
 oos_returns = pd.concat(wf_test_returns["sharpe"]).sort_index()
@@ -111,7 +111,7 @@ plt.ylabel('Equity')
 plt.grid(True, alpha=0.3)
 plt.xticks(rotation=45)
 plt.tight_layout()
-plt.savefig("equity.png", dpi=300, bbox_inches="tight")
+plt.savefig("strategy/graphs_and_stats/equity.png", dpi=300, bbox_inches="tight")
 plt.show()
 
 plt.figure(figsize=(10, 5))
@@ -120,7 +120,7 @@ plt.xlabel("Fold")
 plt.ylabel("Total Return")
 plt.grid(axis="y", alpha=0.3)
 plt.tight_layout()
-plt.savefig("total_return.png", dpi=300, bbox_inches="tight")
+plt.savefig("strategy/graphs_and_stats/total_return.png", dpi=300, bbox_inches="tight")
 
 plt.show()
 
@@ -131,7 +131,7 @@ plt.xlabel("Fold")
 plt.ylabel("Sharpe Ratio")
 plt.grid(axis="y", alpha=0.3)
 plt.tight_layout()
-plt.savefig("sharpe.png", dpi=300, bbox_inches="tight")
+plt.savefig("strategy/graphs_and_stats/sharpe.png", dpi=300, bbox_inches="tight")
 
 plt.show()
 
@@ -142,5 +142,5 @@ plt.xlabel("Fold")
 plt.ylabel("Max Drawdown")
 plt.grid(axis="y", alpha=0.3)
 plt.tight_layout()
-plt.savefig("drawdown.png", dpi=300, bbox_inches="tight")
+plt.savefig("strategy/graphs_and_stats/drawdown.png", dpi=300, bbox_inches="tight")
 plt.show()

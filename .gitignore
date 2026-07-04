@@ -3,3 +3,5 @@ __pycache__/
 continous
 load_summary
 test.py
+strategy/graph_and_stats
+strategy/strategy.py
