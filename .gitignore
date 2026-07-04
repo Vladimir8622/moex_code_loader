@@ -2,6 +2,11 @@ MOEX
 __pycache__/
 continous
 load_summary
+<<<<<<< HEAD
 test.py
 strategy/graph_and_stats
 strategy/strategy.py
+=======
+merge_summary
+test.py
+>>>>>>> 5ecc5cc443bcd281aa06414c642f33e82c7d6d7b
