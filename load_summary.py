@@ -1,29 +1,17 @@
-import pandas as pd
+# TODO поменять на PATH логику для симметричности кода
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-import datetime
 import os
-import requests
-import apimoex
-import time
 from pathlib import Path
-from tqdm import tqdm
-import random
-from requests.exceptions import ConnectionError, Timeout, RequestException
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
 import pandas as pd
 import utilities
+import yaml
 
-
-data_folder = Path('MOEX')
-
-
-def summary_plot(tickers, month_names, plot_filename = 'summary_check.png'):
-
-    size_summary_folder = Path('summary')
+def summary_plot(tickers, month_names, years, size_summary_folder, data_folder, plot_filename = 'summary_check.png'):
+    # Обьявлено в main
+    # size_summary_folder = Path('summary')
     size_summary_folder.mkdir(parents=True, exist_ok=True)
     files = os.listdir(path=data_folder)
 
@@ -34,7 +22,7 @@ def summary_plot(tickers, month_names, plot_filename = 'summary_check.png'):
             series_names.append(month + str(year)[-1])
     series_names = np.array(series_names)
 
-    plt.figure(figsize=(int(len(series_names)/4),int(len(tickers)/3)))
+    plt.figure(figsize=(max(3,int(len(series_names)/4)),max(3,int(len(tickers)/3))))
 
     file_sizes = []
     for ticker in tickers:
@@ -68,12 +56,13 @@ def summary_plot(tickers, month_names, plot_filename = 'summary_check.png'):
         df_ticker = df_sizes[(df_sizes['ticker'] == ticker)]
         for _, row in df_ticker.iterrows():
             # print(row['series_name'],ticker,row['file_size'])
+            size = 0.5 * np.log(row['file_size']) if row['file_size'] > 0 else 0.1
             plt.plot(
                 row['series_name'],
                 ticker,
                 's',
                 color='tab:green',
-                markersize=0.5 * np.log(row['file_size'])
+                markersize=size
             )
 
     plt.yticks(np.arange(len(ticker_order)),ticker_order)
@@ -81,32 +70,37 @@ def summary_plot(tickers, month_names, plot_filename = 'summary_check.png'):
     plt.savefig(size_summary_folder / plot_filename)
     plt.close('all')
 
+if __name__ == '__main__':
+    # Подгрузка конфигурации запуска
+    with open('config.yaml', 'r', encoding='utf-8') as f:
+        config = yaml.safe_load(f)
 
-only_monthly_month_names = ['F','G','J','K','N','Q','V','X']
-quaterly_month_names = ['H', 'M', 'U', 'Z']
+    # Проверка необходимости запускать скрипт
+    if config['summary']['enabled']:
 
-tickers_monthly = []
-tickers_quarterly = []
+        data_folder = Path(config['general']['data_folder'])
+        size_summary_folder = Path(config['general']['summary_of_loading_folder'])
+        
 
-month_names, years, tickers = utilities.generate_names()
+        only_monthly_month_names = config['summary']['monthly_months']
+        quaterly_month_names = config['summary']['quarterly_months']
 
-files = os.listdir(path=data_folder)
+        tickers_monthly = []
+        tickers_quarterly = []
 
-for ticker in tickers:
-    ticker_files = [file for file in files if file.startswith(ticker)]
-    month_names_in_files = sorted(set([file[2:3] for file in ticker_files]))
-    if len(set(only_monthly_month_names) & set(month_names_in_files))==0:
-        tickers_quarterly.append(ticker)
-    else:
-        tickers_monthly.append(ticker)
+        month_names = config['general']['months']
+        years = config['general']['years']
+        tickers = utilities.get_futures_active_tickers()
 
-# print(tickers_monthly)
-# print(tickers_quarterly)
+        files = os.listdir(path=data_folder)
 
-summary_plot(tickers_quarterly,quaterly_month_names,'summary_check_quarterly.png')
-summary_plot(tickers_monthly,only_monthly_month_names,'summary_check_monthly.png')
-def generate_names():
-    month_names = np.array(['F','G','H','J','K','M','N','Q','U','V','X','Z'])
-    years = np.arange(2022,2026)
-    tickers = get_futures_active_tickers()
-    return(month_names, years, tickers)
+        for ticker in tickers:
+            ticker_files = [file for file in files if file.startswith(ticker)]
+            month_names_in_files = sorted(set([file[2:3] for file in ticker_files]))
+            if len(set(only_monthly_month_names) & set(month_names_in_files))==0:
+                tickers_quarterly.append(ticker)
+            else:
+                tickers_monthly.append(ticker)
+
+        summary_plot(tickers_quarterly,quaterly_month_names,years,size_summary_folder,data_folder,'summary_check_quarterly.png')
+        summary_plot(tickers_monthly,month_names,years,size_summary_folder,data_folder,'summary_check_monthly.png')

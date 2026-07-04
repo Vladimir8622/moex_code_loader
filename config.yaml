@@ -1,0 +1,32 @@
+# Общие параметры
+general:
+  data_folder: "MOEX"
+  continuous_folder: "continous"
+  summary_of_merging_folder: "merge_summary"
+  summary_of_loading_folder: "load_summary"
+  
+  years: [2026]
+  # months: ["F","G","H","J","K","M","N","Q","U","V","X","Z"]
+  months: ["V","X","Z"]
+
+# Параметры для этапа загрузки (moex_futures_data_loader.py)
+load:
+  enabled: false                
+ 
+  max_retries: 7
+  base_delay: 5
+
+
+# Параметры для этапа сводки (load_summary.py)
+summary:
+  enabled: true
+
+  monthly_months: ["F","G","J","K","N","Q","V","X"]
+  quarterly_months: ["H","M","U","Z"]
+
+# Параметры для этапа слияния (moex_futures_merge.py)
+merge:
+  enabled: true
+
+  output_suffixes: ["_1min.csv", "_5min.csv"]
+  force_recreate: false        
