@@ -94,6 +94,10 @@ if __name__ == '__main__':
 
         files = os.listdir(path=data_folder)
 
+<<<<<<< HEAD
+summary_plot(tickers_quarterly,quaterly_month_names,'summary_check_quarterly.png')
+summary_plot(tickers_monthly,only_monthly_month_names,'summary_check_monthly.png')
+=======
         for ticker in tickers:
             ticker_files = [file for file in files if file.startswith(ticker)]
             month_names_in_files = sorted(set([file[2:3] for file in ticker_files]))
@@ -104,3 +108,4 @@ if __name__ == '__main__':
 
         summary_plot(tickers_quarterly,quaterly_month_names,years,size_summary_folder,data_folder,'summary_check_quarterly.png')
         summary_plot(tickers_monthly,month_names,years,size_summary_folder,data_folder,'summary_check_monthly.png')
+>>>>>>> 5639834e293015bec4e51481ec9d81d21c906961
