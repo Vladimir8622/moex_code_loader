@@ -7,3 +7,4 @@ moexalgo>=1.0.0
 tqdm>=4.60.0
 urllib3>=1.26.0
 pyyaml>=6.0.3
+skfolio>=0.20.1

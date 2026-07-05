@@ -1,9 +1,7 @@
-# TODO поменять на PATH логику для симметричности кода
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-import os
 from pathlib import Path
 import pandas as pd
 import utilities
@@ -13,7 +11,7 @@ def summary_plot(tickers, month_names, years, size_summary_folder, data_folder, 
     # Обьявлено в main
     # size_summary_folder = Path('summary')
     size_summary_folder.mkdir(parents=True, exist_ok=True)
-    files = os.listdir(path=data_folder)
+    files = [f.name for f in data_folder.iterdir() if f.is_file()]
 
     series_names = []
     for year in years:
@@ -31,7 +29,7 @@ def summary_plot(tickers, month_names, years, size_summary_folder, data_folder, 
                 file = ticker+month+str(year)[-1]+'.csv'
                 file_size = 0
                 if file in files:
-                    file_size = os.path.getsize(data_folder / file)
+                    file_size = (data_folder / file).stat().st_size
                 file_sizes.append({
                     'ticker': ticker,
                     'year': year,
@@ -83,7 +81,7 @@ if __name__ == '__main__':
         
 
         only_monthly_month_names = config['summary']['monthly_months']
-        quaterly_month_names = config['summary']['quarterly_months']
+        quarterly_month_names = config['summary']['quarterly_months']
 
         tickers_monthly = []
         tickers_quarterly = []
@@ -92,7 +90,7 @@ if __name__ == '__main__':
         years = config['general']['years']
         tickers = utilities.get_futures_active_tickers()
 
-        files = os.listdir(path=data_folder)
+        files = [f.name for f in data_folder.iterdir() if f.is_file()]
 
         for ticker in tickers:
             ticker_files = [file for file in files if file.startswith(ticker)]
@@ -102,5 +100,5 @@ if __name__ == '__main__':
             else:
                 tickers_monthly.append(ticker)
 
-        summary_plot(tickers_quarterly,quaterly_month_names,years,size_summary_folder,data_folder,'summary_check_quarterly.png')
+        summary_plot(tickers_quarterly,quarterly_month_names,years,size_summary_folder,data_folder,'summary_check_quarterly.png')
         summary_plot(tickers_monthly,month_names,years,size_summary_folder,data_folder,'summary_check_monthly.png')

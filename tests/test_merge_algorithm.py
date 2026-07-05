@@ -214,6 +214,10 @@ class Merge5MinTest(unittest.TestCase):
 
         self.assertFalse((out_folder / 'ZZ_5min.csv').exists())
 
+import yaml
 
-if __name__ == '__main__':
+with open('config.yaml', 'r', encoding='utf-8') as f:
+    config = yaml.safe_load(f)
+
+if __name__ == '__main__' and config['test']['enabled'] :
     unittest.main()
