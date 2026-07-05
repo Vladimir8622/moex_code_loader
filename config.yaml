@@ -6,12 +6,12 @@ general:
   summary_of_loading_folder: "load_summary"
   
   years: [2026]
-  # months: ["F","G","H","J","K","M","N","Q","U","V","X","Z"]
-  months: ["V","X","Z"]
+  months: ["F","G","H","J","K","M","N","Q","U","V","X","Z"]
+  # months: ["V","X","Z"]
 
 # Параметры для этапа загрузки (moex_futures_data_loader.py)
 load:
-  enabled: false                
+  enabled: true                
  
   max_retries: 7
   base_delay: 5
