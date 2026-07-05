@@ -16,6 +16,9 @@ if __name__ == '__main__':
         'moex_futures_data_loader.py',
         'load_summary.py', 
         'moex_futures_merge.py'
+        'tests/test_data_loader.py'
+        'tests/test_merge_algorithm.py'
+        'tests/test_utilities.py'
     ]
     
     for script in scripts:
