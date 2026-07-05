@@ -26,6 +26,10 @@ class TestGetFuturesActiveTickers(unittest.TestCase):
         # Root ticker = full code minus the last 2 characters (month+year digit)
         self.assertEqual(result, ['RI', 'Si', 'BR'])
 
+import yaml
 
-if __name__ == '__main__':
+with open('config.yaml', 'r', encoding='utf-8') as f:
+    config = yaml.safe_load(f)
+
+if __name__ == '__main__' and config['test']['enabled'] :
     unittest.main()

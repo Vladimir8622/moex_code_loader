@@ -6,12 +6,12 @@ general:
   summary_of_loading_folder: "load_summary"
   
   years: [2026]
-  months: ["F","G","H","J","K","M","N","Q","U","V","X","Z"]
-  # months: ["V","X","Z"]
+  # months: ["F","G","H","J","K","M","N","Q","U","V","X","Z"]
+  months: ["F","G","H"]
 
 # Параметры для этапа загрузки (moex_futures_data_loader.py)
 load:
-  enabled: true                
+  enabled: false                
  
   max_retries: 7
   base_delay: 5
@@ -19,7 +19,7 @@ load:
 
 # Параметры для этапа сводки (load_summary.py)
 summary:
-  enabled: true
+  enabled: false
 
   monthly_months: ["F","G","J","K","N","Q","V","X"]
   quarterly_months: ["H","M","U","Z"]
@@ -29,4 +29,8 @@ merge:
   enabled: true
 
   output_suffixes: ["_1min.csv", "_5min.csv"]
-  force_recreate: false        
+  force_recreate: false       
+
+# Параметры для тестов
+test:
+  enabled: true

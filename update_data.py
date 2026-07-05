@@ -15,9 +15,9 @@ if __name__ == '__main__':
     scripts = [
         'moex_futures_data_loader.py',
         'load_summary.py', 
-        'moex_futures_merge.py'
-        'tests/test_data_loader.py'
-        'tests/test_merge_algorithm.py'
+        'moex_futures_merge.py',
+        'tests/test_data_loader.py',
+        'tests/test_merge_algorithm.py',
         'tests/test_utilities.py'
     ]
     
