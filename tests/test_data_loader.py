@@ -1,16 +1,13 @@
-"""
-Tests for moex_futures_data_loader.make_rets().
 
-apimoex.get_market_candles is monkeypatched so no network call is made.
-"""
 import sys
 import os
 import shutil
 import tempfile
 import unittest
+from pathlib import Path
 from unittest import mock
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'stubs'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'stubs'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 import pandas as pd
@@ -22,12 +19,9 @@ import moex_futures_data_loader as loader
 class MakeRetsTest(unittest.TestCase):
 
     def setUp(self):
-        self.tmp = tempfile.mkdtemp()
-        self._orig_folder = loader.data_folder
-        loader.data_folder = self.tmp
+        self.tmp = Path(tempfile.mkdtemp())
 
     def tearDown(self):
-        loader.data_folder = self._orig_folder
         shutil.rmtree(self.tmp, ignore_errors=True)
 
     def test_writes_csv_with_log_returns_on_success(self):
@@ -37,12 +31,13 @@ class MakeRetsTest(unittest.TestCase):
             {'begin': '2025-01-01 10:01:00', 'open': 101, 'close': 103,
              'high': 104, 'low': 100, 'volume': 20, 'value': 2000},
         ]
-        with mock.patch('apimoex.get_market_candles', return_value=fake_candles):
-            ok = loader.make_rets('RIH5', start=None, end=None)
+        with mock.patch('apimoex.get_market_candles', return_value=fake_candles), \
+             mock.patch('time.sleep', return_value=None):
+            ok = loader.make_rets('RIH5', start=None, end=None, data_folder=self.tmp)
 
         self.assertTrue(ok)
-        out_file = os.path.join(self.tmp, 'RIH5.csv')
-        self.assertTrue(os.path.exists(out_file))
+        out_file = self.tmp / 'RIH5.csv'
+        self.assertTrue(out_file.exists())
 
         df = pd.read_csv(out_file, index_col='begin')
         self.assertIn('log_ret', df.columns)
@@ -53,9 +48,9 @@ class MakeRetsTest(unittest.TestCase):
 
     def test_empty_response_returns_true_and_writes_nothing(self):
         with mock.patch('apimoex.get_market_candles', return_value=[]):
-            ok = loader.make_rets('NOSUCHTICKER', start=None, end=None)
+            ok = loader.make_rets('NOSUCHTICKER', start=None, end=None, data_folder=self.tmp)
         self.assertTrue(ok)
-        self.assertFalse(os.path.exists(os.path.join(self.tmp, 'NOSUCHTICKER.csv')))
+        self.assertFalse((self.tmp / 'NOSUCHTICKER.csv').exists())
 
     def test_retries_then_succeeds_after_transient_connection_errors(self):
         calls = {'n': 0}
@@ -69,7 +64,7 @@ class MakeRetsTest(unittest.TestCase):
 
         with mock.patch('apimoex.get_market_candles', side_effect=flaky), \
              mock.patch('time.sleep', return_value=None):  # skip real backoff delay
-            ok = loader.make_rets('RIH5', start=None, end=None, max_retries=5)
+            ok = loader.make_rets('RIH5', start=None, end=None, data_folder=self.tmp, max_retries=5)
 
         self.assertTrue(ok)
         self.assertEqual(calls['n'], 3)
@@ -78,9 +73,9 @@ class MakeRetsTest(unittest.TestCase):
         with mock.patch('apimoex.get_market_candles',
                          side_effect=ReqConnectionError('down')), \
              mock.patch('time.sleep', return_value=None):
-            ok = loader.make_rets('RIH5', start=None, end=None, max_retries=3)
+            ok = loader.make_rets('RIH5', start=None, end=None, data_folder=self.tmp, max_retries=3)
         self.assertFalse(ok)
-        self.assertFalse(os.path.exists(os.path.join(self.tmp, 'RIH5.csv')))
+        self.assertFalse((self.tmp / 'RIH5.csv').exists())
 
     def test_unexpected_exception_returns_false_without_retry(self):
         calls = {'n': 0}
@@ -90,7 +85,7 @@ class MakeRetsTest(unittest.TestCase):
             raise ValueError('unexpected parsing error')
 
         with mock.patch('apimoex.get_market_candles', side_effect=boom):
-            ok = loader.make_rets('RIH5', start=None, end=None, max_retries=5)
+            ok = loader.make_rets('RIH5', start=None, end=None, data_folder=self.tmp, max_retries=5)
 
         self.assertFalse(ok)
         self.assertEqual(calls['n'], 1, "non-network exceptions must not be retried")
