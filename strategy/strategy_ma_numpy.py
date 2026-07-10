@@ -34,9 +34,7 @@ def strategy(close, log_ret,
 
     returns = np.zeros(n)
 
-    # 0 - нет позиции
-    # 1 - long
-    # -1 - short
+
     position = 0
 
     entry_price = 0.0
@@ -45,16 +43,10 @@ def strategy(close, log_ret,
 
     for i in range(1, n):
 
-        # считаем доходность текущей свечи
         returns[i] = position * log_ret[i]
 
-        # пока MA не появились
         if np.isnan(ma_fast_arr[i]) or np.isnan(ma_slow_arr[i]):
             continue
-
-        # ==========================
-        # Проверяем TP/SL
-        # ==========================
 
         if position == 1:
 
