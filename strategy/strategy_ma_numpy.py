@@ -4,11 +4,12 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import time  
 import os
-
+from numba import njit
+from WOF_numpy import rolling_mean_nb
 
 os.makedirs("strategy/graphs_and_stats/data",exist_ok=True)
 
-from WOF_strategy import (
+from WOF_numpy import (
     walk_forward,
     sharpe_ratio,
     total_return,
@@ -17,29 +18,76 @@ from WOF_strategy import (
 
 start_time = time.time()
 
-def strategy(df, ma_fast, ma_slow, delta):
 
-    df = df.copy()
 
-    df["ma_fast"] = df["close"].rolling(ma_fast).mean()
-    df["ma_slow"] = df["close"].rolling(ma_slow).mean()
-    df["ma_diff"] = df["ma_fast"] - df["ma_slow"]
+@njit(cache=True)
+def strategy(close, log_ret,
+             ma_fast,
+             ma_slow,
+             tp,
+             sl):
 
-    def get_position(diff):
-        if diff > delta:
-            return 1
-        elif diff < -delta:
-            return -1
-        else:
-            return 0
+    ma_fast_arr = rolling_mean_nb(close, ma_fast)
+    ma_slow_arr = rolling_mean_nb(close, ma_slow)
 
-    df["position"] = df["ma_diff"].apply(get_position)
+    n = close.shape[0]
 
-    returns = (
-        df["position"].shift(1) * df["log_ret"]
-    ).fillna(0)
+    returns = np.zeros(n)
+
+    # 0 - нет позиции
+    # 1 - long
+    # -1 - short
+    position = 0
+
+    entry_price = 0.0
+    tp_price = 0.0
+    sl_price = 0.0
+
+    for i in range(1, n):
+
+        # считаем доходность текущей свечи
+        returns[i] = position * log_ret[i]
+
+        # пока MA не появились
+        if np.isnan(ma_fast_arr[i]) or np.isnan(ma_slow_arr[i]):
+            continue
+
+        # ==========================
+        # Проверяем TP/SL
+        # ==========================
+
+        if position == 1:
+
+            if close[i] >= tp_price or close[i] <= sl_price:
+                position = 0
+
+        elif position == -1:
+
+            if close[i] <= tp_price or close[i] >= sl_price:
+                position = 0
+
+
+
+        if position != 0:
+            continue
+
+        prev_diff = ma_fast_arr[i-1] - ma_slow_arr[i-1]
+        curr_diff = ma_fast_arr[i]   - ma_slow_arr[i]
+
+
+        if prev_diff <= 0.0 and curr_diff > 0.0:
+
+            position = 1
+            entry_price = close[i]
+
+            tp_price = entry_price * (1.0 + tp)
+            sl_price = entry_price * (1.0 - sl)
+
+        
 
     return returns
+
+
 
 
 file_path = Path("continous/GD_5min.csv")
@@ -48,8 +96,9 @@ df["begin"] = pd.to_datetime(df["begin"])
 
 param_grid = {
     "ma_fast": range(5, 45, 5),
-    "ma_slow": range(50, 500, 10),
-    "delta": range(10, 510, 50),
+    "ma_slow": range(50, 500, 50),
+    "tp": np.arange(0.01, 0.1, 0.001),
+    "sl": np.arange(0.01, 0.1, 0.001),
 }
 
 objectives = {
@@ -105,7 +154,12 @@ plt.tight_layout()
 plt.savefig("strategy/graphs_and_stats/log_ret.png", dpi=300, bbox_inches="tight")
 plt.show()
 
-oos_returns = pd.concat(wf_test_returns["sharpe"]).sort_index()
+series_list = [
+    pd.Series(ret, index=idx)
+    for idx, ret in wf_test_returns["sharpe"]
+]
+
+oos_returns = pd.concat(series_list).sort_index()
 equity = np.exp(oos_returns.cumsum())
 dates = df.loc[oos_returns.index, "begin"]
 
